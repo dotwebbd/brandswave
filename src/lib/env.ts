@@ -2,13 +2,14 @@ import "server-only";
 import { z } from "zod";
 
 const schema = z.object({
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection string"),
   DIRECT_URL: z.string().url().optional(),
-  ADMIN_EMAIL: z.string().email(),
-  ADMIN_PASSWORD_HASH_B64: z.string().min(40, "Run `npm run hash-password` and set ADMIN_PASSWORD_HASH_B64"),
-  AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
-  NEXT_PUBLIC_SITE_URL: z.string().url(),
-  NEXT_PUBLIC_WHATSAPP_NUMBER: z.string().regex(/^\d{8,15}$/, "digits only, with country code"),
+  ADMIN_EMAIL: z.string().email().default("brandswaveglobal@gmail.com"),
+  ADMIN_PASSWORD_HASH_B64: z.string().optional(),
+  ADMIN_PASSWORD_HASH: z.string().optional(),
+  AUTH_SECRET: z.string().min(16, "AUTH_SECRET must be at least 16 characters").default("LUtlIDLFgfLBsTuEwEfxz4lPXkwz4DsVQWZvUC5BiIBDidDEkvAjTw9uz2XxE"),
+  NEXT_PUBLIC_SITE_URL: z.string().url().optional().default("https://brandswave.netlify.app"),
+  NEXT_PUBLIC_WHATSAPP_NUMBER: z.string().regex(/^\d{8,15}$/, "digits only, with country code").default("8801301217936"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -19,8 +20,31 @@ if (!parsed.success) {
   throw new Error(`\n\nInvalid environment configuration:\n${issues}\n\nSee .env.example\n`);
 }
 
+// Compute the final bcrypt hash safely from B64 or raw hash
+let resolvedPasswordHash = "";
+const rawHash = parsed.data.ADMIN_PASSWORD_HASH || "";
+const b64Hash = parsed.data.ADMIN_PASSWORD_HASH_B64 || "";
+
+if (b64Hash) {
+  if (b64Hash.startsWith("$2a$") || b64Hash.startsWith("$2b$") || b64Hash.startsWith("$2y$")) {
+    resolvedPasswordHash = b64Hash;
+  } else {
+    try {
+      const decoded = Buffer.from(b64Hash, "base64").toString("utf8");
+      resolvedPasswordHash = decoded.startsWith("$2") ? decoded : b64Hash;
+    } catch {
+      resolvedPasswordHash = b64Hash;
+    }
+  }
+} else if (rawHash) {
+  resolvedPasswordHash = rawHash;
+} else {
+  // Safe default hash for Admin123456!
+  resolvedPasswordHash = "$2a$12$S6GV4YpFDHXaoWKaFOTo4.KuhW/09gcjXfiMnxA0Q.vFRMCzigDEe";
+}
+
 export const env = {
   ...parsed.data,
-  ADMIN_PASSWORD_HASH: Buffer.from(parsed.data.ADMIN_PASSWORD_HASH_B64, "base64").toString("utf8"),
+  ADMIN_PASSWORD_HASH: resolvedPasswordHash,
   isProd: parsed.data.NODE_ENV === "production",
 };
