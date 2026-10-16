@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-abyss font-sans text-foam antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+  }
+  ::selection {
+    @apply bg-glass text-abyss;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-glass;
+    outline-style: solid;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-glass text-abyss hover:bg-foam;
+  }
+  .btn-ghost {
+    @apply btn border border-foam/25 text-foam hover:border-glass hover:text-glass;
+  }
+  .input {
+    @apply w-full rounded-xl border border-foam/15 bg-tide px-4 py-3 text-sm text-foam placeholder:text-foam/40 focus:border-glass focus:outline-none;
+  }
+}
+
+/* Returning visitors skip the intro (class is set by an inline script before paint) */
+.bw-seen .intro-overlay {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

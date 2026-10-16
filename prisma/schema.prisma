@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooled (runtime)
+  directUrl = env("DIRECT_URL")   // direct (migrations)
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum VideoCategory {
+  TVC
+  COMMERCIAL
+  FASHION_SHOOT
+  SOCIAL_MEDIA
+  OTHER
+}
+
+enum VideoOrientation {
+  LANDSCAPE_16_9
+  VERTICAL_9_16
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+/// Optional table for future multi-admin support. Current login uses env credentials.
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+/// Compressed image bytes. NEVER select `data` in list queries; use /api/images/[id].
+model Image {
+  id        String   @id @default(cuid())
+  data      Bytes
+  mimeType  String
+  sizeBytes Int
+  width     Int
+  height    Int
+  createdAt DateTime @default(now())
+
+  modelCovers Model[]       @relation("ModelCover")
+  modelPhotos ModelPhoto[]
+  services    Service[]
+  videos      Video[]
+  teamPhotos  TeamMember[]
+}
+
+model Model {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  gender       Gender
+  heightCm     Int?
+  chestBust    Int? // cm
+  waist        Int? // cm
+  hips         Int? // cm
+  eyeColor     String?
+  hairColor    String?
+  bio          String?  @db.Text
+  coverImageId String?
+  isFeatured   Boolean  @default(false)
+  isPublished  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  coverImage Image?        @relation("ModelCover", fields: [coverImageId], references: [id], onDelete: SetNull)
+  private    ModelPrivate?
+  photos     ModelPhoto[]
+  videos     ModelVideo[]
+
+  @@index([gender, isPublished])
+  @@index([isFeatured])
+}
+
+/// Admin-only contact data. Never include in public selects.
+model ModelPrivate {
+  modelId String  @id
+  phone   String?
+  email   String?
+  model   Model   @relation(fields: [modelId], references: [id], onDelete: Cascade)
+}
+
+model ModelPhoto {
+  id        String @id @default(cuid())
+  modelId   String
+  imageId   String
+  sortOrder Int    @default(0)
+
+  model Model @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@index([modelId, sortOrder])
+}
+
+model ModelVideo {
+  id          String  @id @default(cuid())
+  modelId     String
+  title       String
+  description String? @db.Text
+  youtubeUrl  String
+  sortOrder   Int     @default(0)
+
+  model Model @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId, sortOrder])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String   @db.Text
+  imageId     String?
+  priceMin    Int?
+  priceMax    Int?
+  hidePrice   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  image Image? @relation(fields: [imageId], references: [id], onDelete: SetNull)
+
+  @@index([isPublished, sortOrder])
+}
+
+model Video {
+  id               String           @id @default(cuid())
+  title            String
+  youtubeId        String
+  category         VideoCategory    @default(COMMERCIAL)
+  orientation      VideoOrientation @default(LANDSCAPE_16_9)
+  isFeatured       Boolean          @default(false)
+  thumbnailImageId String?
+  createdAt        DateTime         @default(now())
+
+  thumbnail Image? @relation(fields: [thumbnailImageId], references: [id], onDelete: SetNull)
+
+  @@index([category, orientation])
+  @@index([isFeatured])
+  @@index([createdAt])
+}
+
+model Review {
+  id          String       @id @default(cuid())
+  clientName  String
+  designation String?
+  company     String?
+  rating      Int
+  text        String       @db.Text
+  status      ReviewStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+
+  @@index([status, createdAt])
+}
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  photoId     String?
+  phone       String?
+  email       String?
+  facebook    String?
+  linkedin    String?
+  instagram   String?
+  // Per-field display switches (admin controls what the public sees)
+  showPhone   Boolean  @default(false)
+  showEmail   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  photo Image? @relation(fields: [photoId], references: [id], onDelete: SetNull)
+
+  @@index([isPublished, sortOrder])
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  name         String
+  phone        String
+  email        String?
+  projectBrief String     @db.Text
+  source       String     @default("contact-form")
+  status       LeadStatus @default(NEW)
+  ipHash       String
+  createdAt    DateTime   @default(now())
+
+  @@index([status, createdAt])
+}
+
+/// Singleton row (id = 1)
+model AboutContent {
+  id        Int      @id @default(1)
+  vision    String   @db.Text
+  mission   String   @db.Text
+  updatedAt DateTime @updatedAt
+}
