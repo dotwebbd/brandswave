@@ -9,7 +9,7 @@ export async function requireAdmin() {
   return session;
 }
 
-/** Variant for route handlers that should return 401 instead of redirecting. */
+/** Variant for route handlers that should return 401 instead of redirecting.  */
 export async function requireAdminApi() {
   const session = await getSession();
   if (!session) throw new Response("Unauthorized", { status: 401 });
