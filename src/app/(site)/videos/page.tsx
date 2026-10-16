@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getVideosPage } from "@/lib/data/videos";
 import type { Video } from "@/lib/data/videos";
-import { VideoCard } from "@/components/videos/VideoCard";
+import { VideosPageGrid } from "@/components/videos/VideosPageGrid";
 import { FilterChips } from "@/components/videos/FilterChips";
 import { Pagination } from "@/components/videos/Pagination";
 import { siteConfig } from "@/config/site";
@@ -84,13 +84,7 @@ export default async function VideosPage({
           <p className="text-foam/60">No videos match your filters. Try adjusting your selection.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-          {items.map((video) => (
-            <div key={video.id}>
-              <VideoCard video={video as unknown as Video} />
-            </div>
-          ))}
-        </div>
+        <VideosPageGrid items={items as unknown as Video[]} />
       )}
 
       <Pagination page={currentPage} totalPages={totalPages} total={total} />

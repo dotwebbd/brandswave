@@ -49,42 +49,42 @@ export default async function HomePage() {
     <>
       <Hero />
 
-      <ScrollReveal className="py-24 border-y border-foam/5">
+      <ScrollReveal>
         <VideoShowcase
           videos={videos as unknown as Video[]}
-          heading="Featured Work"
-          subheading="A selection of our latest commercials, TVCs and social films."
+          heading="Featured Commercials &amp; Films"
+          subheading="A curated selection of our commercial productions, TVCs, and viral fashion campaigns."
           ctaLabel="View All Videos"
           ctaHref="/videos"
           showViewAll
         />
       </ScrollReveal>
 
-      <ScrollReveal className="py-24 border-y border-foam/5" delay={0.1}>
+      <ScrollReveal delay={0.1}>
         <ModelShowcase
           models={models as unknown as ModelCard[]}
-          heading="Featured Models"
-          subheading="Discover the talent we represent. Cast for commercials, TVCs, fashion shoots and social campaigns."
+          heading="Featured Talents &amp; Models"
+          subheading="Discover elite runway models and commercial actors. Cast for commercials, TVCs, fashion shoots and global campaigns."
           ctaLabel="View All Models"
           ctaHref="/models"
         />
       </ScrollReveal>
 
-      <ScrollReveal className="py-24 border-y border-foam/5" delay={0.2}>
+      <ScrollReveal delay={0.15}>
         <ServiceHighlights
           services={services as unknown as Service[]}
-          heading="Our Services"
-          subheading="From casting to production, we handle every detail of your campaign."
+          heading="Our Agency Services"
+          subheading="From casting and location scouting to 4K cinematography and post-production sound mastering."
           ctaLabel="View All Services"
           ctaHref="/services"
         />
       </ScrollReveal>
 
-      <ScrollReveal className="py-24 border-y border-foam/5" delay={0.3}>
+      <ScrollReveal delay={0.2}>
         <ReviewSlider reviews={reviews as unknown as Review[]} />
       </ScrollReveal>
 
-      <ScrollReveal className="py-24 border-y border-foam/5" delay={0.4}>
+      <ScrollReveal delay={0.25}>
         <TeamSection members={team as unknown as TeamMember[]} />
       </ScrollReveal>
 

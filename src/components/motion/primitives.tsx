@@ -100,13 +100,20 @@ export function ScaleOnHover({
   scale = 1.03,
   className,
   children,
+  ...rest
 }: {
   scale?: number;
   className?: string;
   children: React.ReactNode;
-}) {
+} & HTMLMotionProps<"div">) {
   return (
-    <motion.div className={className} whileHover={{ scale }} whileTap={{ scale: 0.985 }} transition={{ type: "spring", stiffness: 300, damping: 22 }}>
+    <motion.div
+      className={className}
+      whileHover={{ scale }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      {...rest}
+    >
       {children}
     </motion.div>
   );

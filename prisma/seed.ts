@@ -1,27 +1,46 @@
 import { PrismaClient, Gender, VideoCategory, VideoOrientation, ReviewStatus, LeadStatus } from "@prisma/client";
 import sharp from "sharp";
 
+import fs from "fs";
+import path from "path";
+
 const prisma = new PrismaClient();
 
-async function createSampleImage(color: { r: number; g: number; b: number }, width = 800, height = 1000) {
-  const buf = await sharp({
-    create: {
-      width,
-      height,
-      channels: 4,
-      background: { ...color, alpha: 1 },
-    },
-  })
-    .webp({ quality: 80 })
-    .toBuffer();
+async function loadAndStoreImage(relativeFilePath: string, fallbackColor = { r: 28, g: 53, b: 86 }) {
+  const fullPath = path.join(process.cwd(), relativeFilePath);
+  let buf: Buffer;
+  let infoWidth = 800;
+  let infoHeight = 1000;
+
+  if (fs.existsSync(fullPath)) {
+    const raw = fs.readFileSync(fullPath);
+    const meta = await sharp(raw).metadata();
+    infoWidth = meta.width || 800;
+    infoHeight = meta.height || 1000;
+    buf = await sharp(raw)
+      .resize({ width: 1200, withoutEnlargement: true })
+      .webp({ quality: 85 })
+      .toBuffer();
+  } else {
+    buf = await sharp({
+      create: {
+        width: 800,
+        height: 1000,
+        channels: 4,
+        background: { ...fallbackColor, alpha: 1 },
+      },
+    })
+      .webp({ quality: 80 })
+      .toBuffer();
+  }
 
   const img = await prisma.image.create({
     data: {
       data: new Uint8Array(buf),
       mimeType: "image/webp",
       sizeBytes: buf.length,
-      width,
-      height,
+      width: infoWidth,
+      height: infoHeight,
     },
   });
   return img.id;
@@ -49,13 +68,13 @@ async function main() {
     },
   });
 
-  // 2. Seed Sample Images
-  console.log("Creating placeholder portfolio images...");
-  const img1 = await createSampleImage({ r: 28, g: 53, b: 86 }); // Swell blue
-  const img2 = await createSampleImage({ r: 18, g: 35, b: 59 }); // Tide
-  const img3 = await createSampleImage({ r: 134, g: 217, b: 198 }); // Glass
-  const img4 = await createSampleImage({ r: 216, g: 199, b: 165 }); // Sand
-  const img5 = await createSampleImage({ r: 40, g: 60, b: 80 });
+  // 2. Seed Real High-Fashion Editorial Images
+  console.log("Loading high-fashion showcase images...");
+  const img1 = await loadAndStoreImage("public/showcase/hero-female.jpg", { r: 28, g: 53, b: 86 });
+  const img2 = await loadAndStoreImage("public/showcase/hero-male.jpg", { r: 18, g: 35, b: 59 });
+  const img3 = await loadAndStoreImage("public/showcase/hero-beauty.jpg", { r: 134, g: 217, b: 198 });
+  const img4 = await loadAndStoreImage("public/showcase/hero-tvc.jpg", { r: 216, g: 199, b: 165 });
+  const img5 = img4;
 
   // 3. Seed Models with measurements, private contact, photos, and videos
   console.log("Seeding models...");
@@ -101,6 +120,11 @@ async function main() {
         },
       },
     });
+  } else {
+    await prisma.model.update({
+      where: { slug: "zara-ahmed" },
+      data: { coverImageId: img1 },
+    });
   }
 
   const existingRahim = await prisma.model.findUnique({ where: { slug: "rahim-chowdhury" } });
@@ -144,6 +168,11 @@ async function main() {
         },
       },
     });
+  } else {
+    await prisma.model.update({
+      where: { slug: "rahim-chowdhury" },
+      data: { coverImageId: img2 },
+    });
   }
 
   const existingMehnaz = await prisma.model.findUnique({ where: { slug: "mehnaz-karim" } });
@@ -173,6 +202,11 @@ async function main() {
           create: [{ imageId: img3, sortOrder: 0 }],
         },
       },
+    });
+  } else {
+    await prisma.model.update({
+      where: { slug: "mehnaz-karim" },
+      data: { coverImageId: img3 },
     });
   }
 
@@ -347,6 +381,15 @@ async function main() {
           isPublished: true,
         },
       ],
+    });
+  } else {
+    await prisma.teamMember.updateMany({
+      where: { name: "Kamrul Hasan" },
+      data: { photoId: img2 },
+    });
+    await prisma.teamMember.updateMany({
+      where: { name: "Sabrina Siddique" },
+      data: { photoId: img3 },
     });
   }
 
