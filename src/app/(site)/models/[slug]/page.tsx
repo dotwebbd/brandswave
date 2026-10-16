@@ -11,29 +11,37 @@ import { Phone } from "lucide-react";
 import type { ModelProfile } from "@/lib/data/models";
 
 export async function generateStaticParams() {
-  const slugs = await getAllModelSlugs();
-  return slugs.map((s) => ({ slug: s.slug }));
+  try {
+    const slugs = await getAllModelSlugs();
+    return slugs.map((s) => ({ slug: s.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const model = await getModelBySlug(slug);
-  if (!model) return { title: "Model Not Found" };
-  return {
-    title: `${model.name} | BrandsWave Model`,
-    description: model.bio ? model.bio.slice(0, 160) : `Professional ${model.gender} model represented by BrandsWave in Dhaka.`,
-    alternates: { canonical: `${siteConfig.url}/models/${slug}` },
-    openGraph: {
-      type: "profile",
-      url: `${siteConfig.url}/models/${slug}`,
-      title: `${model.name} | BrandsWave`,
-      description: model.bio ? model.bio.slice(0, 200) : undefined,
-      images: model.coverImageId
-        ? [{ url: `${siteConfig.url}/api/images/${model.coverImageId}?wm=1`, width: 1200, height: 1200, alt: model.name }]
-        : [{ url: `${siteConfig.url}/opengraph-image.png`, width: 1200, height: 630, alt: model.name }],
-    },
-    twitter: { card: "summary_large_image" },
-  };
+  try {
+    const { slug } = await params;
+    const model = await getModelBySlug(slug);
+    if (!model) return { title: "Model Not Found" };
+    return {
+      title: `${model.name} | BrandsWave Model`,
+      description: model.bio ? model.bio.slice(0, 160) : `Professional ${model.gender} model represented by BrandsWave in Dhaka.`,
+      alternates: { canonical: `${siteConfig.url}/models/${slug}` },
+      openGraph: {
+        type: "profile",
+        url: `${siteConfig.url}/models/${slug}`,
+        title: `${model.name} | BrandsWave`,
+        description: model.bio ? model.bio.slice(0, 200) : undefined,
+        images: model.coverImageId
+          ? [{ url: `${siteConfig.url}/api/images/${model.coverImageId}?wm=1`, width: 1200, height: 1200, alt: model.name }]
+          : [{ url: `${siteConfig.url}/opengraph-image.png`, width: 1200, height: 630, alt: model.name }],
+      },
+      twitter: { card: "summary_large_image" },
+    };
+  } catch {
+    return { title: "BrandsWave Model" };
+  }
 }
 
 export default async function ModelProfilePage({ params }: { params: Promise<{ slug: string }> }) {
