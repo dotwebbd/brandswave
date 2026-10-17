@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import bcrypt from "bcryptjs";
 import { timingSafeEqual } from "node:crypto";
 import { env } from "@/lib/env";
 import { createSession, destroySession } from "@/lib/auth/session";
@@ -13,8 +12,6 @@ export type LoginState = { error?: string } | undefined;
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
-// Used to keep response time similar when the email is wrong.
-const DUMMY_HASH = bcrypt.hashSync("not-the-real-password", 12);
 
 const safeEqual = (a: string, b: string) => {
   const ab = Buffer.from(a);
@@ -37,7 +34,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
 
   const { email, password } = parsed.data;
   const emailOk = safeEqual(email, env.ADMIN_EMAIL.trim().toLowerCase());
-  const passwordOk = await bcrypt.compare(password, emailOk ? env.ADMIN_PASSWORD_HASH : DUMMY_HASH);
+  const passwordOk = safeEqual(password, env.ADMIN_PASSWORD);
 
   if (!emailOk || !passwordOk) return { error: "Invalid email or password." };
 

@@ -7,10 +7,8 @@ This is the **foundation (Prompt 1)**: schema, security, auth, image pipeline, c
 
 ```bash
 npm install
-# 1) set your admin password (prints ADMIN_PASSWORD_HASH_B64)
-npm run hash-password -- "choose-a-strong-password"
-# 2) paste that line into .env.local
-# 3) create tables in Neon
+# 1) configure ADMIN_EMAIL and ADMIN_PASSWORD in .env.local
+# 2) create tables in Neon
 npm run db:migrate -- --name init
 # 4) run
 npm run dev
